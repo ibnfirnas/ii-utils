@@ -1,7 +1,10 @@
 #! /usr/bin/awk -f
 
-{
+/^[0-9]+ / {
     "date -d @" $1 " +%Y-%m-%d--%H:%M:%S%z" | getline date
     sub("^" $1, "")
     print(date, $0)
+    next
 }
+
+//
