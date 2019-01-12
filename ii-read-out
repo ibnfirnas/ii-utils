@@ -1,0 +1,5 @@
+#! /bin/bash
+
+set -e
+
+stdbuf -o L tail -f out | ii-map-timestamp
