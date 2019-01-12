@@ -1,4 +1,4 @@
-#! /bin/awk -f
+#! /usr/bin/awk -f
 
 {
     "date -d @" $1 " +%Y-%m-%d--%H:%M:%S%z" | getline date
