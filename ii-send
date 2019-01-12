@@ -1,0 +1,25 @@
+#! /bin/bash
+
+set -e
+
+chan_pipe="$PWD/in"
+msg_buf=$(mktemp -p "$PWD" msg_buf.$(date '+%Y-%m-%d--%H:%M:%S%z').XXXXX.txt)
+vim "$msg_buf"
+echo "About to send the following msg to $chan_pipe:"
+echo
+cat "$msg_buf"
+echo
+read -p "Continue (y/n)?" choice
+case "$choice" in
+  y)
+    cat "$msg_buf" > "$chan_pipe"
+    ;;
+  n)
+    rm "$msg_buf"
+    exit 0
+    ;;
+  *)
+    echo "Unknown option: $choice"
+    exit 1
+    ;;
+esac
