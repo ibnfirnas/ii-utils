@@ -2,4 +2,6 @@
 
 set -e
 
-stdbuf -o L ii $@ | ii-map-timestamp | ii-color-lines
+  stdbuf -o L ii $@ \
+| stdbuf -o L ii-map-timestamp \
+| stdbuf -o L ii-color-lines
