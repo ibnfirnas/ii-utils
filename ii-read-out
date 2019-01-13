@@ -2,4 +2,7 @@
 
 set -e
 
-stdbuf -o L tail -f out -n $(wc -l out | awk '{print $1}') | ii-map-timestamp | ii-color-lines
+stdbuf -o L tail -f out -n $(wc -l out | awk '{print $1}') \
+| stdbuf -o L awk '$2 != "-!-"' \
+| ii-map-timestamp \
+| ii-color-lines
