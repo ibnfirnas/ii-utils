@@ -1,0 +1,9 @@
+#! /bin/bash
+
+SERVER_PIPE='./in'
+CHANNELS_FILE='./join'
+
+for chan in $(cat "$CHANNELS_FILE")
+do
+    echo "/join $chan" > "$SERVER_PIPE"
+done
