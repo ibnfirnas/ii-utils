@@ -2,6 +2,82 @@
 
 set -e
 
-  stdbuf -o L ii $@ \
-| stdbuf -o L ii-map-timestamp \
-| stdbuf -o L ii-color-lines
+PROGRAM_NAME='ii-connect'
+DATE_FMT='+%F %T %z'
+
+LOG="$PWD/$PROGRAM_NAME.log"
+
+# Watching ./out is not sufficient, since it receives a different output
+# than stdout, where, aside from other differences, PING is missing.
+II_STDOUT="$PWD/ii.stdout.log"
+II_STDERR="$PWD/ii.stderr.log"
+
+timestamp() {
+    date "$DATE_FMT"
+}
+
+log() {
+    printf "$(timestamp) [$PROGRAM_NAME] $@\n" \
+    | tee -a "$LOG" \
+    1>&2
+}
+
+twrap() {
+    while read line
+    do
+        echo "$(timestamp) ==> $line"
+    done
+}
+
+wait_for_ping() {
+    tail \
+        -f "$2" \
+        -n "$(wc -l "$2" | awk '{print $1}')" \
+    | awk \
+        -v now="$1" \
+        '$1 >= now && $2 == "PING"  {exit 0}
+         $1 >= now && $2 == "ERROR" {exit 1}'
+}
+
+main() {
+    ii_args="$@"
+    backoff_init=5
+    backoff_curr=$backoff_init
+    while true
+    do
+        # In-case we win the race against the fork:
+        touch "$II_STDOUT"
+
+        # In-case we lose the race against the fork:
+        time_0="$(date +%s)"
+        sleep 1
+
+        log 'Connecting ...'
+        stdbuf -o L \
+            ii $ii_args \
+            2>> >(twrap >> "$II_STDERR") \
+            1>> "$II_STDOUT" &
+        ii_pid="$!"
+        log "Forked ii ($ii_pid), waiting for a new PING or ERROR msg in $II_STDOUT"
+        if wait_for_ping "$time_0" "$II_STDOUT"
+        then
+            log 'Got PING. Joining channels ...'
+            # TODO: Wait for ./in pipe to exist before attempting to join
+            ii-join
+            log "Joined. Waiting for ii to exit (pid: $ii_pid) ..."
+            wait "$ii_pid"
+            time_1="$(date +%s)"
+            if (( $time_1 - $time_0 > $backoff_curr ))
+            then
+                backoff_curr=$backoff_init
+            fi
+        else
+            log 'Got ERROR.'
+        fi
+        log "Backing off for $backoff_curr seconds ..."
+        sleep "$backoff_curr"
+        backoff_curr=$(( $backoff_curr * 2 ))
+    done
+}
+
+main "$@"
