@@ -3,7 +3,16 @@
 SERVER_PIPE='./in'
 CHANNELS_FILE='./join'
 
-for chan in $(cat "$CHANNELS_FILE")
-do
-    echo "/join $chan" > "$SERVER_PIPE"
-done
+awk '
+    # Treating lines beginning with "//" as comments
+    ! /^\/\// {
+        channels = channels sep $1
+        sep = ","
+    }
+
+    END {
+        printf("/join %s\n", channels)
+    }
+    ' \
+    "$CHANNELS_FILE" \
+> "$SERVER_PIPE"
