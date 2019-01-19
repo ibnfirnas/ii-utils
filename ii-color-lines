@@ -1,20 +1,31 @@
 #! /usr/bin/awk -f
 
 BEGIN {
-    n = 2
-    for (i=0; i<=n; i++) {
-        c[i] = 32 + i
-    }
+    bg[0] = 40
+    bg[1] = 40
+    bg[2] = 40
+
+    fg[0] = 31
+    fg[1] = 32
+    fg[2] = 33
 }
 
-/^[0-9]/ {
-    nick_curr = $2
-    if (nick_curr != nick_prev) {
-        i = ++count % n
-        nick_prev = nick_curr
-    }
+/^[0-9]/ && $2 == "-!-" {
+    print_line(fg[0], bg[0], $0)
+    next
 }
 
-{
-    print "\033[" c[i] "m\033[40m" $0 "\033[0m"
+/^[0-9]/ && $2 != "-!-" && $2 != nick {
+    nick = $2
+    nick_alt_count++
+}
+
+/^[0-9]/ && $2 != "-!-" {
+    i = 1 + (nick_alt_count % 2)
+    print_line(fg[i], bg[1], $0)
+    next
+}
+
+function print_line(fg, bg, line) {
+    print "\033[" fg "m\033[" bg "m" line "\033[0m"
 }
