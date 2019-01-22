@@ -11,7 +11,7 @@ BEGIN {
 }
 
 /^[0-9]/ && $2 == "-!-" {
-    print_line(fg[0], bg[0], $0)
+    print_line(fg[0], bg[0])
     next
 }
 
@@ -22,10 +22,21 @@ BEGIN {
 
 /^[0-9]/ && $2 != "-!-" {
     i = 1 + (nick_alt_count % 2)
-    print_line(fg[i], bg[1], $0)
+    print_line(fg[i], bg[1])
     next
 }
 
-function print_line(fg, bg, line) {
-    print "\033[" fg "m\033[" bg "m" line "\033[0m"
+function print_line(fg, bg,    timestamp, nick) {
+    timestamp = $1
+    nick = $2
+    printf(    "%s"  ,      color(0, fg, bg, timestamp))
+    printf(    "%s%s", OFS, color(1, fg, bg, nick))
+    for (i=3; i<=NF; i++) {
+        printf("%s%s", OFS, color(0, fg, bg, $i))
+    }
+    printf "\n"
+}
+
+function color(is_bright, fg, bg, text) {
+    return sprintf("\033[%d;%dm\033[%dm%s\033[0m", is_bright, fg, bg, text)
 }
