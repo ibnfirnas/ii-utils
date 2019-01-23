@@ -1,19 +1,29 @@
 #! /usr/bin/awk -f
 
 BEGIN {
-    bg[0] = 40
-    bg[1] = 40
-    bg[2] = 40
+    bg_default = 40
+    bg_red     = 41
+    bg_green   = 42
 
-    fg[0] = 31
-    fg[1] = 32
-    fg[2] = 33
+    bg[0] = bg_red
+    bg[1] = bg_green
+
+    fg_default = 0
+    fg_gray    = 30
+    fg_red     = 31
+    fg_green   = 32
+    fg_brown   = 33
+    fg_blue    = 34
+    fg_teal    = 36
+    fg_white   = 37
+
+    fg[0] = fg_brown
+    fg[1] = fg_teal
 }
 
-/^[0-9]/ && $2 == "-!-" {
-    print_line(fg[0], bg[0])
-    next
-}
+/^[0-9]/ && $2 == "-!-" && $5 == "joined" {print_sys(fg_green  , bg_default); next}
+/^[0-9]/ && $2 == "-!-" && $5 == "left"   {print_sys(fg_red    , bg_default); next}
+/^[0-9]/ && $2 == "-!-"                   {print_sys(fg_default, bg_default); next}
 
 /^[0-9]/ && $2 != "-!-" && $2 != nick {
     nick = $2
@@ -21,18 +31,22 @@ BEGIN {
 }
 
 /^[0-9]/ && $2 != "-!-" {
-    i = 1 + (nick_alt_count % 2)
-    print_line(fg[i], bg[1])
+    i = nick_alt_count % 2
+    print_user(fg[i], bg_default)
     next
 }
 
-function print_line(fg, bg,    timestamp, nick) {
+function print_sys(fg, bg) {
+    print color(0, fg, bg, $0)
+}
+
+function print_user(fg, bg,    timestamp, nick) {
     timestamp = $1
     nick = $2
-    printf(    "%s"  ,      color(0, fg, bg, timestamp))
-    printf(    "%s%s", OFS, color(1, fg, bg, nick))
+    printf(    "%s"  ,      color(0                    , fg, bg, timestamp))
+    printf(    "%s%s", OFS, color(nick == "-!-" ? 0 : 1, fg_white, bg, nick))
     for (i=3; i<=NF; i++) {
-        printf("%s%s", OFS, color(0, fg, bg, $i))
+        printf("%s%s", OFS, color(0                    , fg, bg, $i))
     }
     printf "\n"
 }
