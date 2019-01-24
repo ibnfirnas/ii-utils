@@ -1,0 +1,54 @@
+#! /bin/bash
+
+set -e
+
+declare -A opts=(
+    ["-output_file"]='ii.stdout.log'
+    ["-tail_length"]='full'  # 'full' | int
+)
+
+case "$1" in
+    "")
+        printf 'What is your nick?\n' >&2
+        exit 1
+        ;;
+     *)
+        my_nick="$1"
+        shift 1
+        ;;
+esac
+
+while :
+do
+    key="$1"
+    val="$2"
+    case "$key" in
+        '')
+            break
+            ;;
+        * )
+            if [ -v opts["$key"] ]
+            then
+                if [ "$val" != "" ]
+                then
+                    opts["$key"]="$val"
+                    shift 2
+                else
+                    echo "Option $key requires an argument" >&2
+                    exit 1
+                fi
+            else
+                echo "Unknown option: $key" >&2
+                exit 1
+            fi
+    esac
+done
+
+case "${opts['-tail_length']}" in
+    'full') opts['-tail_length']="$(cat ${opts['-output_file']} | wc -l)"
+esac
+
+  stdbuf -o L tail -f "${opts['-output_file']}" -n "${opts['-tail_length']}" \
+| stdbuf -o L awk -v my_nick="$my_nick" '$3 == "PRIVMSG" && $4 == my_nick' \
+| stdbuf -o L ii-map-timestamp \
+| stdbuf -o L ii-color-lines
