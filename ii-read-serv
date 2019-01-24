@@ -1,0 +1,11 @@
+#! /bin/bash
+
+set -e
+
+case "$1" in
+    "") tail_length="$(cat out | wc -l)";;
+     *) tail_length="$1";;
+esac
+
+  stdbuf -o L tail -f out -n "$tail_length" \
+| stdbuf -o L ii-map-timestamp \
