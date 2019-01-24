@@ -63,8 +63,15 @@ main() {
         then
             log 'Got PING. Joining channels ...'
             # TODO: Wait for ./in pipe to exist before attempting to join
-            ii-join
-            log "Joined. Waiting for ii to exit (pid: $ii_pid) ..."
+            if test -f ./join
+            then
+                log 'Found join file, joining channels...'
+                ii-join
+                log 'Joined.'
+            else
+                log 'Did not find join file, not joining any channels.'
+            fi
+            log "Waiting for ii to exit (pid: $ii_pid) ..."
             wait "$ii_pid"
             time_1="$(date +%s)"
             if (( $time_1 - $time_0 > $backoff_curr ))
