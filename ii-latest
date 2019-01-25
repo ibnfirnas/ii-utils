@@ -1,0 +1,20 @@
+#! /bin/bash
+
+set -e
+
+ii_stdout_log='ii.stdout.log'
+
+awk '
+    $3 == "PRIVMSG" {
+        latest_timestamps[$4] = $1
+    }
+
+    END {
+        for (chan in latest_timestamps) {
+            print(latest_timestamps[chan], chan)
+        }
+    }
+' \
+"$ii_stdout_log" \
+| sort -n \
+| ii-map-timestamp
