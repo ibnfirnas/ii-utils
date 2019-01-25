@@ -1,0 +1,79 @@
+#! /usr/bin/awk -f
+
+BEGIN {
+    OUT_PATH_PREFIX = OUT_PATH_PREFIX ? OUT_PATH_PREFIX : ENVIRON["PWD"]
+    RS = "\r\n"
+    INDENT = "    "
+    TRUE   = 1
+}
+
+$3 == 353    {add_many_to_one($6, 7, NF);                             update_files(); next}
+$3 == "JOIN" {add_one_to_one(  chan_from_one($4), nick_from_one($2)); update_files(); next}
+$3 == "PART" {del_one_from_one(chan_from_one($4), nick_from_one($2)); update_files(); next}
+$3 == "QUIT" {del_one_from_all(                   nick_from_one($2)); update_files(); next}
+
+function chan_from_one(chan) {
+    return strip_col(chan)
+}
+
+function nick_from_one(nick_str,    nick_arr) {
+    split(nick_str, nick_arr, "!")
+    return strip_col(nick_arr[1])
+}
+
+function strip_col(str) {
+    sub("^:", "", str)
+    return str
+}
+
+function add_many_to_one(chan, i_1, i_n,    i, nick, tag) {
+    sub("^:", "", $i_1)
+    for (i=i_1; i<=i_n; i++) {
+        nick = $i
+        tag = substr(nick, 1, 1)
+        if (tag ~ /^[+@]/) {
+            nick = substr(nick, 2, length(nick))
+        } else {
+            tag = ""
+        }
+        Tag[chan, nick] = tag
+        add_one_to_one(chan, nick)
+    }
+}
+
+function add_one_to_one(chan, nick) {
+    Members[chan, nick] = TRUE
+}
+
+function del_one_from_one(chan, nick) {
+    delete Members[chan, nick]
+}
+
+function del_one_from_all(nick,    chan_nick_str, chan_nick_arr) {
+    for (chan_nick_str in Members) {
+        split(chan_nick_str, chan_nick_arr, SUBSEP)
+        if (chan_nick_arr[2] == nick) {
+            del_one_from_one(chan_nick_arr[1], chan_nick_arr[2])
+        }
+    }
+}
+
+function update_files(    chan_nick_str, chan_nick_arr, chan, nick, curr, count, dir, file, tag) {
+    for (chan_nick_str in Members) {
+        split(chan_nick_str, chan_nick_arr, SUBSEP)
+        chan = chan_nick_arr[1]
+        nick = chan_nick_arr[2]
+        curr[chan, ++count[chan]] = nick
+    }
+
+    for (chan in count) {
+        dir = OUT_PATH_PREFIX "/" chan
+        file = dir "/" "names"
+        for (i=1; i<=count[chan]; i++) {
+            nick = curr[chan, i]
+            tag = Tag[chan, nick]
+            print(nick, tag) > file
+        }
+        close(file)
+    }
+}

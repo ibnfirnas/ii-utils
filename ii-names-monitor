@@ -1,0 +1,13 @@
+#! /bin/bash
+
+set -e
+
+ii_stdout_log='ii.stdout.log'
+
+case "$1" in
+    "") tail_length="$(cat $ii_stdout_log | wc -l)";;
+     *) tail_length="$1";;
+esac
+
+  stdbuf -o L tail -f "$ii_stdout_log" -n "$tail_length" \
+| stdbuf -o L ii-names-route
