@@ -72,7 +72,7 @@ function update_files(    chan_nick_str, chan_nick_arr, chan, nick, curr, count,
         for (i=1; i<=count[chan]; i++) {
             nick = curr[chan, i]
             tag = Tag[chan, nick]
-            print(nick, tag) > file
+            printf("%s%s\n", tag, nick) > file
         }
         close(file)
     }
