@@ -7,13 +7,17 @@ BEGIN {
     TRUE   = 1
 }
 
-$3 == 353    {add_many_to_one($6, 7, NF);                             update_files(); next}
+$3 == 353    {add_many_to_one( chan_from_many($6), 7, NF);            update_files(); next}
 $3 == "JOIN" {add_one_to_one(  chan_from_one($4), nick_from_one($2)); update_files(); next}
 $3 == "PART" {del_one_from_one(chan_from_one($4), nick_from_one($2)); update_files(); next}
 $3 == "QUIT" {del_one_from_all(                   nick_from_one($2)); update_files(); next}
 
+function chan_from_many(chan) {
+    return tolower(chan)
+}
+
 function chan_from_one(chan) {
-    return strip_col(chan)
+    return tolower(strip_col(chan))
 }
 
 function nick_from_one(nick_str,    nick_arr) {
