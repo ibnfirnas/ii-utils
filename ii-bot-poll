@@ -1,0 +1,51 @@
+#! /usr/bin/awk -f
+
+BEGIN {
+    my_nick = nick ? nick : "pollbot"
+}
+
+$3 == my_nick && $4 == "create"  {create() ; next}
+$3 == my_nick && $4 == "vote"    {vote()   ; next}
+$3 == my_nick && $4 == "results" {results(); next}
+$3 == my_nick && $4 == "destroy" {destroy(); next}
+
+function create(    poll, i, opt) {
+    poll = $5
+    for (i=6; i<=NF; i++) {
+        opt = $i
+        Votes[poll, opt] = 0
+    }
+}
+
+function vote(    nick, poll, opt, _voted) {
+    nick = $2
+    poll = $5
+    opt = $6
+    if (!_voted[poll, nick]++) {
+        Votes[poll, opt]++
+    }
+}
+
+function results(    poll, poll_opt_str, poll_opt, p, o) {
+    poll = $5
+    for (poll_opt_str in Votes) {
+        split(poll_opt_str, poll_opt, SUBSEP)
+        p = poll_opt[1]
+        o = poll_opt[2]
+        if (p == poll) {
+            print o, Votes[p, o]
+        }
+    }
+}
+
+function destroy(    poll, poll_opt_str, poll_opt, p, o) {
+    poll = $5
+    for (poll_opt_str in Votes) {
+        split(poll_opt_str, poll_opt, SUBSEP)
+        p = poll_opt[1]
+        o = poll_opt[2]
+        if (p == poll) {
+            delete Votes[p, o]
+        }
+    }
+}
