@@ -1,13 +1,13 @@
 #! /usr/bin/awk -f
 
 BEGIN {
-    my_nick = nick ? nick : "pollbot"
+    me = me ? me : "pollbot"
 }
 
-$3 == my_nick && $4 == "create"  {create() ; next}
-$3 == my_nick && $4 == "vote"    {vote()   ; next}
-$3 == my_nick && $4 == "results" {results(); next}
-$3 == my_nick && $4 == "destroy" {destroy(); next}
+$2 == admin && $3 == me && $4 == "create"  {create() ; next}
+$2 != "-!-" && $3 == me && $4 == "vote"    {vote()   ; next}
+$2 != "-!-" && $3 == me && $4 == "results" {results(); next}
+$2 == admin && $3 == me && $4 == "destroy" {destroy(); next}
 
 function create(    poll, i, opt) {
     poll = $5
@@ -21,31 +21,31 @@ function vote(    nick, poll, opt, _voted) {
     nick = $2
     poll = $5
     opt = $6
-    if (!_voted[poll, nick]++) {
-        Votes[poll, opt]++
+    if (!Voted[poll, nick]++) Votes[poll, opt]++
+}
+
+function results(    poll, poll_requested, poll_opt0, poll_opt, opt) {
+    poll_requested = $5
+    for (poll_opt0 in Votes) {
+        split(poll_opt0, poll_opt, SUBSEP)
+        poll = poll_opt[1]
+        opt  = poll_opt[2]
+        if (poll == poll_requested) print opt, Votes[poll, opt]
     }
 }
 
-function results(    poll, poll_opt_str, poll_opt, p, o) {
-    poll = $5
-    for (poll_opt_str in Votes) {
-        split(poll_opt_str, poll_opt, SUBSEP)
-        p = poll_opt[1]
-        o = poll_opt[2]
-        if (p == poll) {
-            print o, Votes[p, o]
-        }
+function destroy(    poll, poll_requested, poll_opt0, poll_nick0, poll_opt, poll_nick, opt, nick) {
+    poll_requested = $5
+    for (poll_opt0 in Votes) {
+        split(poll_opt0, poll_opt, SUBSEP)
+        poll = poll_opt[1]
+        opt  = poll_opt[2]
+        if (poll == poll_requested) delete Votes[poll, opt]
     }
-}
-
-function destroy(    poll, poll_opt_str, poll_opt, p, o) {
-    poll = $5
-    for (poll_opt_str in Votes) {
-        split(poll_opt_str, poll_opt, SUBSEP)
-        p = poll_opt[1]
-        o = poll_opt[2]
-        if (p == poll) {
-            delete Votes[p, o]
-        }
+    for (poll_nick0 in Voted) {
+        split(poll_nick0, poll_nick, SUBSEP)
+        poll = poll_nick[1]
+        nick = poll_nick[2]
+        if (poll == poll_requested) delete Voted[poll, nick]
     }
 }
