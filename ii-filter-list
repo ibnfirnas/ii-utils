@@ -1,0 +1,21 @@
+#! /usr/bin/awk -f
+
+BEGIN {
+    s = " +"
+}
+
+$3 == 321 {
+    delete channels
+    line = 0
+}
+
+$3 == 322 {
+    sub("^" $1 s $2 s $3 s $4 s, "")
+    channels[++line] = $0
+}
+
+END {
+    for (line in channels) {
+        print channels[line]
+    }
+}
