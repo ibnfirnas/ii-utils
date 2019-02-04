@@ -53,10 +53,13 @@ main() {
         sleep 1
 
         log 'Connecting ...'
-        stdbuf -o L \
-            ii $ii_args \
-            2>> >(twrap >> "$II_STDERR") \
-            1>> "$II_STDOUT" &
+        (
+            stdbuf -o L \
+                ii $ii_args \
+                2>> >(twrap >> "$II_STDERR") \
+                1>> "$II_STDOUT"
+            true  # Do not kill the parent process
+        )&
         ii_pid="$!"
         log "Forked ii ($ii_pid), waiting for a new PING or ERROR msg in $II_STDOUT"
         if wait_for_ping "$time_0" "$II_STDOUT"
