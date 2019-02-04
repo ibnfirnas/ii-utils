@@ -1,0 +1,49 @@
+#! /usr/bin/gawk -f
+#
+# GAWK gives us co-processes, not available in original AWK.
+
+BEGIN {
+    S = " +"
+}
+
+$3 == 321 {
+    List++
+    Time[List] = $1
+    Chan[List] = 0
+    Complete[List] = 0
+    next
+}
+
+$3 == 322 {
+    sub("^" $1 S $2 S $3 S $4 S, "")
+    Channels[List, ++Chan[List]] = $0
+    next
+}
+
+$3 == 323 {
+    EndList++
+    sort = "sort"
+    for (c=1; c<=Chan[List]; c++) {
+        print Channels[List, c] |& sort
+    }
+    close(sort, "to")
+    date = "date -d @" Time[List] " +%Y-%m-%d--%H:%M:%S%z"
+    date | getline timestamp
+    close(date)
+    file = "list." List "." timestamp ".txt"
+    while (sort |& getline chan) {
+        print chan > file
+    }
+    close(sort)
+    close(file)
+    End[List] = 1  # So we can show which lists were not ended.
+}
+
+END {
+    if (List == EndList) {
+        exit 0
+    } else {
+        printf("Incomplete: List = %d, EndList = %d\n", List, EndList) > "/dev/stderr"
+        exit 1
+    }
+}

@@ -1,8 +1,0 @@
-#! /bin/sh
-
-ii_stdout_log='ii.stdout.log'
-
-timestamp=$(tail -1 "$ii_stdout_log" | awk '{print $1}')
-echo '/list' >> './in'
-awk -v timestamp="$timestamp" '$1 > timestamp && $3 == 323 {exit 0}' "$ii_stdout_log"
-ii-filter-list "$ii_stdout_log" | sort | gzip > "list.$(date +%Y-%m-%d--%H:%M:%S%z).txt.gz"
