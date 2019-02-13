@@ -1,4 +1,8 @@
-#! /usr/bin/awk -f
+#! /usr/bin/gawk -f
+
+# gawk gives us co-processes, which allows us to create input/output pipelines,
+# rather than be limited to a single file/process output destination.
+# We're using this to sort the nicks in update_files().
 
 BEGIN {
     OUT_PATH_PREFIX = OUT_PATH_PREFIX ? OUT_PATH_PREFIX : ENVIRON["PWD"]
@@ -62,7 +66,7 @@ function del_one_from_all(nick,    chan_nick_str, chan_nick_arr) {
     }
 }
 
-function update_files(    chan_nick_str, chan_nick_arr, chan, nick, curr, count, dir, file, tag) {
+function update_files(    chan_nick_str, chan_nick_arr, chan, nick, curr, count, dir, file, sort, line, tag) {
     for (chan_nick_str in Members) {
         split(chan_nick_str, chan_nick_arr, SUBSEP)
         chan = chan_nick_arr[1]
@@ -72,12 +76,18 @@ function update_files(    chan_nick_str, chan_nick_arr, chan, nick, curr, count,
 
     for (chan in count) {
         dir = OUT_PATH_PREFIX "/" chan
-        file = dir "/" "names"
+        sort = "sort"
         for (i=1; i<=count[chan]; i++) {
             nick = curr[chan, i]
             tag = Tag[chan, nick]
-            printf("%s%s\n", tag, nick) > file
+            printf("%s%s\n", tag, nick) |& sort
         }
+        close(sort, "to")
+        file = dir "/" "names"
+        while (sort |& getline line) {
+            print line > file
+        }
+        close(sort)
         close(file)
     }
 }
