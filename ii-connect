@@ -1,7 +1,5 @@
 #! /bin/bash
 
-set -e
-
 PROGRAM_NAME='ii-connect'
 DATE_FMT='+%F %T %z'
 
