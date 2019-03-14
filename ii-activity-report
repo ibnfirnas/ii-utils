@@ -3,7 +3,7 @@
 set -e
 
 report() {
-    time_0=$(date -d "$(date -d today +%F)" +%s)
+    time_0=$(date -d "$1" +%s)
     for server_dir in $HOME/irc/*
     do
         echo $(basename $server_dir)
@@ -24,7 +24,20 @@ report() {
 }
 
 main() {
-    report
+    time_0='00:00'  # Beginning of today (i.e midnight)
+
+    while :
+    do
+        case "$1"
+        in '')
+            break
+        ;; *)
+            time_0="$1"
+            shift 1
+        esac
+    done
+
+    report "$time_0"
 }
 
 main "$@"
