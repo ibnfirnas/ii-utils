@@ -1,20 +1,30 @@
 #! /bin/sh
 
-time_0=$(date -d "$(date -d today +%F)" +%s)
-for server_dir in $HOME/irc/*
-do
-    echo $(basename $server_dir)
-    for channel in $server_dir/\#*
+set -e
+
+report() {
+    time_0=$(date -d "$(date -d today +%F)" +%s)
+    for server_dir in $HOME/irc/*
     do
-        log_file="${channel}/out"
-        if test -f "$log_file"
-        then
-            printf "$(basename $channel) "
-            awk -v time_0="$time_0" '$1 > time_0 && !($2 == "-!-")' $log_file \
-            | wc -l
-        fi
-    done \
-    | sort -n -k 2 \
-    | column -t
-    echo
-done
+        echo $(basename $server_dir)
+        for channel in $server_dir/\#*
+        do
+            log_file="${channel}/out"
+            if test -f "$log_file"
+            then
+                printf "$(basename $channel) "
+                awk -v time_0="$time_0" '$1 > time_0 && !($2 == "-!-")' $log_file \
+                | wc -l
+            fi
+        done \
+        | sort -n -k 2 \
+        | column -t
+        echo
+    done
+}
+
+main() {
+    report
+}
+
+main "$@"
