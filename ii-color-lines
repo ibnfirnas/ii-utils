@@ -1,7 +1,7 @@
 #! /usr/bin/awk -f
 
 BEGIN {
-    bg_default = 40
+    bg_default = 0
     bg_red     = 41
     bg_green   = 42
 
@@ -52,5 +52,6 @@ function print_user(fg, bg,    timestamp, nick) {
 }
 
 function color(is_bright, fg, bg, text) {
-    return sprintf("\033[%d;%dm\033[%dm%s\033[0m", is_bright, fg, bg, text)
+    bg = bg ? sprintf("\033[%dm", bg) : ""
+    return sprintf("\033[%d;%dm%s%s\033[0m", is_bright, fg, bg, text)
 }
