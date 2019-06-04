@@ -1,4 +1,12 @@
-.PHONY: install
+BINARIES := ii-map-timestamp
+CC := c89-gcc -Wall
+
+.PHONY: build install clean
+
+build: $(BINARIES)
 
 install:
-	cp ./ii-* ~/bin/
+	cp $(filter-out %.c,$(wildcard ./ii-*)) ~/bin/
+
+clean:
+	rm -f $(BINARIES)
