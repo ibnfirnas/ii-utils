@@ -12,7 +12,7 @@ main()
 	char buf_rest[BUF_SIZE];
 	struct tm *tm;
 
-	while (scanf( "%d %[^\n]\n", &ts0, buf_rest) != EOF) {
+	while (scanf( "%d %[^\n]", &ts0, buf_rest) != EOF) {
 		ts = (time_t) ts0;
 		tm = localtime(&ts);
 		strftime(buf_time, BUF_SIZE, "%Y-%m-%d--%H:%M:%S%z", tm);
